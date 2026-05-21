@@ -60,6 +60,16 @@ function BellIcon({ className }) {
   )
 }
 
+function ShoppingCartIcon({ className }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+    </svg>
+  )
+}
+
 export default function Header() {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -83,9 +93,9 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 md:flex">
-          <a href="/" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+          <Link to="/marketplace" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
             Marketplace
-          </a>
+          </Link>
           <a href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
             Categorias
           </a>
@@ -113,6 +123,17 @@ export default function Header() {
             <WalletIcon className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">R$ 1.250,00</span>
           </div>
+
+          {/* Cart */}
+          <Link 
+            to="/checkout"
+            className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <ShoppingCartIcon className="h-5 w-5" />
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              2
+            </span>
+          </Link>
 
           {/* Notifications */}
           <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
@@ -143,15 +164,15 @@ export default function Header() {
                   <p className="text-sm font-medium text-foreground">Player123</p>
                   <p className="text-xs text-muted-foreground">player@email.com</p>
                 </div>
-                <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
+                <Link to="/profile" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
                   Meu Perfil
-                </a>
+                </Link>
                 <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
                   Meus Itens
                 </a>
-                <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
+                <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
                   Transacoes
-                </a>
+                </Link>
                 <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
                   Configuracoes
                 </a>
