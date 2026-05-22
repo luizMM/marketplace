@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '@/components/Header'
-import { allItems, games } from '@/data/items'
 import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react';
+
 
 function SearchIcon({ className }) {
   return (
@@ -131,6 +132,11 @@ function MarketplaceItemCard({ item }) {
 }
 
 export default function MarketplacePage() {
+  // Estados para dados da API
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  
+  // Estados de filtro (mantidos)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedGame, setSelectedGame] = useState('Todos')
   const [selectedRarity, setSelectedRarity] = useState('Todos')
@@ -139,25 +145,27 @@ export default function MarketplacePage() {
 
   const rarities = ['Todos', 'comum', 'raro', 'epico', 'lendario']
 
-  const filteredItems = allItems.filter((item) => {
+  // Adicione este useEffect para buscar os dados
+  useEffect(() => {
+    fetch('http://localhost:8000/items')
+      .then((res) => res.json())
+      .then((data) => {
+        setItems(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error("Erro ao buscar itens:", err)
+        setLoading(false)
+      })
+  }, [])
+
+  // Ajuste o filtro para usar 'items' em vez de 'allItems'
+  const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.game.toLowerCase().includes(searchQuery.toLowerCase())
+                          item.game.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesGame = selectedGame === 'Todos' || item.game === selectedGame
     const matchesRarity = selectedRarity === 'Todos' || item.rarity === selectedRarity
     return matchesSearch && matchesGame && matchesRarity
-  })
-
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    switch (sortBy) {
-      case 'preco-menor':
-        return a.price - b.price
-      case 'preco-maior':
-        return b.price - a.price
-      case 'nome':
-        return a.name.localeCompare(b.name)
-      default:
-        return b.id - a.id
-    }
   })
 
   return (
