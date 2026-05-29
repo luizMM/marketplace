@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.Python
+
+# Ambiente virtual Python
+marketplace-insper/backend/env/
+
+# Banco de dados (gerado pelo seed_db.py)
+marketplace.db
+
+# Variáveis de ambiente (contém credenciais/configurações locais)
+.env
+
+# Build do frontend
+dist/
+dist-ssr/
+
+# Dependências Node
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Deploy artifacts
+marketplace-insper/deploy/backend.zip
+marketplace-insper/deploy/bucket-policy.json
+
+# Chaves SSH — nunca commitar
+*.pem
+
+# PDF do Projeto
+*.pdf
+
+# Roteiro pessoal
+marketplace-insper/ROTEIRO_VIDEO.md
+
+# Editores
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.sw?

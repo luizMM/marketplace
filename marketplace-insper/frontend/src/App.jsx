@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { UserProvider } from '@/context/UserContext'
 import HomePage from '@/pages/HomePage'
 import AuthPage from '@/pages/AuthPage'
 import MarketplacePage from '@/pages/MarketplacePage'
@@ -8,15 +9,17 @@ import ProfilePage from '@/pages/ProfilePage'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
-        <Route path="/item/:id" element={<ItemDetailPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Routes>
-    </BrowserRouter>
+    <UserProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/item/:id" element={<ItemDetailPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </BrowserRouter>
+    </UserProvider>
   )
 }

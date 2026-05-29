@@ -1,7 +1,12 @@
+import os
 from sqlmodel import create_engine, SQLModel, Session
+from dotenv import load_dotenv
 
-sqlite_url = "sqlite:///marketplace.db"
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///marketplace.db")
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '@/components/Header'
 import { cn } from '@/lib/utils'
-import { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function SearchIcon({ className }) {
   return (
@@ -18,14 +18,6 @@ function FilterIcon({ className }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-  )
-}
-
-function HeartIcon({ className, filled }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
     </svg>
   )
 }
@@ -62,65 +54,28 @@ const rarityColors = {
 }
 
 function MarketplaceItemCard({ item }) {
-  const [isFavorite, setIsFavorite] = useState(false)
-  const discount = item.originalPrice ? Math.round((1 - item.price / item.originalPrice) * 100) : 0
-
   return (
-    <Link 
+    <Link
       to={`/item/${item.id}`}
       className="group relative block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
     >
-      {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-secondary">
         <img
-          src={item.image}
+          src={item.image || 'https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=400&h=400&fit=crop'}
           alt={item.name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            setIsFavorite(!isFavorite)
-          }}
-          className="absolute right-2 top-2 rounded-full bg-background/80 p-2 backdrop-blur-sm transition-colors hover:bg-background"
-        >
-          <HeartIcon 
-            className={cn("h-4 w-4", isFavorite ? "text-red-500" : "text-muted-foreground")} 
-            filled={isFavorite}
-          />
-        </button>
-
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <div className="absolute left-2 top-2 rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground">
-            -{discount}%
-          </div>
-        )}
-
-        {/* Rarity Badge */}
-        <div className={cn("absolute bottom-2 left-2 rounded-md border px-2 py-1 text-xs font-medium capitalize", rarityColors[item.rarity])}>
+        <div className={cn("absolute bottom-2 left-2 rounded-md border px-2 py-1 text-xs font-medium capitalize", rarityColors[item.rarity] || rarityColors.comum)}>
           {item.rarity}
         </div>
       </div>
-
-      {/* Content */}
       <div className="p-4">
         <p className="mb-1 text-xs text-muted-foreground">{item.game}</p>
         <h3 className="mb-2 truncate text-sm font-semibold text-foreground">{item.name}</h3>
-        
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-lg font-bold text-primary">
-              R$ {item.price.toFixed(2).replace('.', ',')}
-            </p>
-            {item.originalPrice && (
-              <p className="text-xs text-muted-foreground line-through">
-                R$ {item.originalPrice.toFixed(2).replace('.', ',')}
-              </p>
-            )}
-          </div>
+          <p className="text-lg font-bold text-primary">
+            R$ {item.price.toFixed(2).replace('.', ',')}
+          </p>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Vendedor</p>
             <p className="text-xs font-medium text-foreground">{item.seller}</p>
@@ -131,41 +86,42 @@ function MarketplaceItemCard({ item }) {
   )
 }
 
+const ALL_GAMES = ['Todos', 'CS2', 'Valorant', 'Fortnite']
+const ALL_RARITIES = ['Todos', 'comum', 'raro', 'epico', 'lendario']
+
 export default function MarketplacePage() {
-  // Estados para dados da API
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  // Estados de filtro (mantidos)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedGame, setSelectedGame] = useState('Todos')
   const [selectedRarity, setSelectedRarity] = useState('Todos')
   const [sortBy, setSortBy] = useState('recentes')
   const [viewMode, setViewMode] = useState('grid')
 
-  const rarities = ['Todos', 'comum', 'raro', 'epico', 'lendario']
-
-  // Adicione este useEffect para buscar os dados
   useEffect(() => {
-    fetch('http://localhost:8000/items')
+    fetch(`${API_URL}/items`)
       .then((res) => res.json())
       .then((data) => {
         setItems(data)
         setLoading(false)
       })
-      .catch((err) => {
-        console.error("Erro ao buscar itens:", err)
-        setLoading(false)
-      })
+      .catch(() => setLoading(false))
   }, [])
 
-  // Ajuste o filtro para usar 'items' em vez de 'allItems'
   const filteredItems = items.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.game.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.game.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesGame = selectedGame === 'Todos' || item.game === selectedGame
     const matchesRarity = selectedRarity === 'Todos' || item.rarity === selectedRarity
     return matchesSearch && matchesGame && matchesRarity
+  })
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (sortBy === 'preco-menor') return a.price - b.price
+    if (sortBy === 'preco-maior') return b.price - a.price
+    if (sortBy === 'nome') return a.name.localeCompare(b.name)
+    return b.id - a.id
   })
 
   return (
@@ -173,7 +129,6 @@ export default function MarketplacePage() {
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Marketplace</h1>
           <p className="mt-2 text-muted-foreground">
@@ -183,7 +138,6 @@ export default function MarketplacePage() {
 
         {/* Filters Bar */}
         <div className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 lg:flex-row lg:items-center lg:justify-between">
-          {/* Search */}
           <div className="relative flex-1 lg:max-w-md">
             <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -195,31 +149,23 @@ export default function MarketplacePage() {
             />
           </div>
 
-          {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Game Filter */}
             <select
               value={selectedGame}
               onChange={(e) => setSelectedGame(e.target.value)}
               className="h-10 rounded-lg border border-border bg-secondary px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {games.map((game) => (
-                <option key={game} value={game}>{game}</option>
-              ))}
+              {ALL_GAMES.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
 
-            {/* Rarity Filter */}
             <select
               value={selectedRarity}
               onChange={(e) => setSelectedRarity(e.target.value)}
               className="h-10 rounded-lg border border-border bg-secondary px-3 text-sm capitalize text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {rarities.map((rarity) => (
-                <option key={rarity} value={rarity} className="capitalize">{rarity}</option>
-              ))}
+              {ALL_RARITIES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
             </select>
 
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -231,23 +177,16 @@ export default function MarketplacePage() {
               <option value="nome">Nome A-Z</option>
             </select>
 
-            {/* View Mode Toggle */}
             <div className="flex items-center rounded-lg border border-border bg-secondary p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={cn(
-                  "rounded-md p-2 transition-colors",
-                  viewMode === 'grid' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
+                className={cn("rounded-md p-2 transition-colors", viewMode === 'grid' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
               >
                 <GridIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={cn(
-                  "rounded-md p-2 transition-colors",
-                  viewMode === 'list' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
+                className={cn("rounded-md p-2 transition-colors", viewMode === 'list' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
               >
                 <ListIcon className="h-4 w-4" />
               </button>
@@ -255,21 +194,18 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {sortedItems.length} {sortedItems.length === 1 ? 'item encontrado' : 'itens encontrados'}
+            {loading ? 'Carregando...' : `${sortedItems.length} ${sortedItems.length === 1 ? 'item encontrado' : 'itens encontrados'}`}
           </p>
         </div>
 
-        {/* Items Grid */}
-        {sortedItems.length > 0 ? (
-          <div className={cn(
-            "grid gap-6",
-            viewMode === 'grid' 
-              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-              : "grid-cols-1"
-          )}>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : sortedItems.length > 0 ? (
+          <div className={cn("grid gap-6", viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1")}>
             {sortedItems.map((item) => (
               <MarketplaceItemCard key={item.id} item={item} />
             ))}

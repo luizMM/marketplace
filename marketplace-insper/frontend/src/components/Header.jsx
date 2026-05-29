@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useUser } from '@/context/UserContext'
 
-// Icons
 function GamepadIcon({ className }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -60,48 +60,37 @@ function BellIcon({ className }) {
   )
 }
 
-function ShoppingCartIcon({ className }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="8" cy="21" r="1" />
-      <circle cx="19" cy="21" r="1" />
-      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-    </svg>
-  )
-}
-
 export default function Header() {
   const navigate = useNavigate()
+  const { user, logout } = useUser()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const handleLogout = () => {
+    logout()
     setUserMenuOpen(false)
     navigate('/login')
   }
+
+  const formatBalance = (balance) =>
+    `R$ ${balance.toFixed(2).replace('.', ',')}`
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <GamepadIcon className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">GameVault</span>
-        </div>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 md:flex">
           <Link to="/marketplace" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
             Marketplace
           </Link>
-          <a href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Categorias
-          </a>
-          <a href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Vender
-          </a>
         </nav>
 
         {/* Search Bar */}
@@ -118,75 +107,73 @@ export default function Header() {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Wallet Balance */}
-          <div className="hidden items-center gap-2 rounded-lg bg-secondary px-3 py-2 sm:flex">
-            <WalletIcon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">R$ 1.250,00</span>
-          </div>
+          {user ? (
+            <>
+              {/* Wallet Balance */}
+              <div className="hidden items-center gap-2 rounded-lg bg-secondary px-3 py-2 sm:flex">
+                <WalletIcon className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">{formatBalance(user.balance)}</span>
+              </div>
 
-          {/* Cart */}
-          <Link 
-            to="/checkout"
-            className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <ShoppingCartIcon className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-              2
-            </span>
-          </Link>
+              {/* Notifications */}
+              <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <BellIcon className="h-5 w-5" />
+              </button>
 
-          {/* Notifications */}
-          <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <BellIcon className="h-5 w-5" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
-          </button>
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-secondary"
+                >
+                  <div className="h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary-foreground">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <ChevronDownIcon className="hidden h-4 w-4 text-muted-foreground sm:block" />
+                </button>
 
-          {/* User Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-secondary"
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
+                    <div className="border-b border-border px-3 py-2">
+                      <p className="text-sm font-medium text-foreground">{user.username}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                    >
+                      Meu Perfil
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                    >
+                      Transacoes
+                    </Link>
+                    <div className="border-t border-border pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-secondary"
+                      >
+                        Sair
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              <div className="h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=gaming"
-                  alt="Avatar"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <ChevronDownIcon className="hidden h-4 w-4 text-muted-foreground sm:block" />
-            </button>
-
-            {/* User Dropdown */}
-            {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
-                <div className="border-b border-border px-3 py-2">
-                  <p className="text-sm font-medium text-foreground">Player123</p>
-                  <p className="text-xs text-muted-foreground">player@email.com</p>
-                </div>
-                <Link to="/profile" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
-                  Meu Perfil
-                </Link>
-                <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
-                  Meus Itens
-                </a>
-                <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
-                  Transacoes
-                </Link>
-                <a href="#" className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
-                  Configuracoes
-                </a>
-                <div className="border-t border-border pt-1">
-                  <button 
-                    onClick={handleLogout}
-                    className="block w-full rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-secondary"
-                  >
-                    Sair
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              Entrar
+            </Link>
+          )}
 
           {/* Mobile Menu Button */}
           <button
@@ -212,20 +199,16 @@ export default function Header() {
             </div>
           </div>
           <nav className="flex flex-col gap-2">
-            <a href="#" className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+            <Link to="/marketplace" className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
               Marketplace
-            </a>
-            <a href="#" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
-              Categorias
-            </a>
-            <a href="#" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
-              Vender
-            </a>
+            </Link>
           </nav>
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
-            <WalletIcon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">R$ 1.250,00</span>
-          </div>
+          {user && (
+            <div className="mt-4 flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
+              <WalletIcon className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">{formatBalance(user.balance)}</span>
+            </div>
+          )}
         </div>
       )}
     </header>
