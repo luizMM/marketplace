@@ -1,16 +1,13 @@
+import boto3
 import os
-from sqlmodel import create_engine, SQLModel, Session
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///marketplace.db")
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+REGION = os.getenv("AWS_REGION", "us-east-1")
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+dynamodb = boto3.resource('dynamodb', region_name=REGION)
 
-def get_session():
-    with Session(engine) as session:
-        yield session
+users_table = dynamodb.Table('gamevault-users')
+items_table = dynamodb.Table('gamevault-items')
+transactions_table = dynamodb.Table('gamevault-transactions')

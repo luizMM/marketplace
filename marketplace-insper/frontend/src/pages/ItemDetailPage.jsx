@@ -84,13 +84,44 @@ export default function ItemDetailPage() {
       const data = await res.json()
       if (!res.ok) {
         setPurchaseError(data.detail || 'Erro ao realizar compra')
+        setPurchasing(false)
         return
       }
-      updateBalance(data.new_balance)
-      setPurchaseSuccess(true)
+
+      // Faz polling até a Lambda concluir o processamento assíncrono
+      const txId = data.transaction_id
+      let attempts = 0
+      const poll = setInterval(async () => {
+        attempts++
+        try {
+          const txRes = await fetch(`${API_URL}/transactions/${txId}`)
+          const txData = await txRes.json()
+          if (txData.status === 'concluida') {
+            clearInterval(poll)
+            const userRes = await fetch(`${API_URL}/users/${user.id}`)
+            const userData = await userRes.json()
+            updateBalance(userData.balance)
+            setPurchasing(false)
+            setPurchaseSuccess(true)
+          } else if (txData.status === 'erro') {
+            clearInterval(poll)
+            setPurchaseError('Erro no processamento da transação. Tente novamente.')
+            setPurchasing(false)
+          } else if (attempts >= 20) {
+            clearInterval(poll)
+            setPurchaseError('Processamento demorou mais que o esperado. Verifique suas transações.')
+            setPurchasing(false)
+          }
+        } catch {
+          if (attempts >= 20) {
+            clearInterval(poll)
+            setPurchaseError('Erro ao verificar status da transação.')
+            setPurchasing(false)
+          }
+        }
+      }, 1000)
     } catch {
       setPurchaseError('Erro de conexao com o servidor')
-    } finally {
       setPurchasing(false)
     }
   }

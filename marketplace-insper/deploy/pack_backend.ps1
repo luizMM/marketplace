@@ -7,7 +7,7 @@ $OUT = "backend.zip"
 if (Test-Path $OUT) { Remove-Item $OUT }
 
 # Arquivos a incluir (exclui venv e db)
-$files = @("main.py", "database.py", "models.py", "seed_db.py", "requirements.txt", ".env")
+$files = @("main.py", "database.py", "models.py", "seed_db.py", "requirements.txt", ".env", "lambda_function.py")
 
 $tempDir = ".\backend_temp"
 if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse }

@@ -1,34 +1,35 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
-from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
 
-class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(unique=True, index=True)
-    email: str = Field(unique=True, index=True)
+
+class User(BaseModel):
+    id: str
+    username: str
+    email: str
     password_hash: str
-    balance: float = Field(default=1000.0)
-    items: List["Item"] = Relationship(back_populates="owner")
+    balance: float
 
-class Item(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+
+class Item(BaseModel):
+    id: str
     name: str
     price: float
-    game: str = Field(default="CS2")
-    rarity: str = Field(default="comum")
-    image: str = Field(default="")
-    description: str = Field(default="")
-    category: str = Field(default="Armas")
-    condition: str = Field(default="Factory New")
-    owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    owner: Optional[User] = Relationship(back_populates="items")
+    game: str = "CS2"
+    rarity: str = "comum"
+    image: str = ""
+    description: str = ""
+    category: str = "Armas"
+    condition: str = "Factory New"
+    owner_id: Optional[str] = None
 
-class Transaction(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    item_id: int
-    item_name: str = Field(default="")
-    buyer_id: int
-    seller_id: int
-    seller_name: str = Field(default="")
+
+class Transaction(BaseModel):
+    id: str
+    item_id: str
+    item_name: str
+    buyer_id: str
+    seller_id: str
+    seller_name: str
     amount: float
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    status: str = "pendente"
+    timestamp: str
